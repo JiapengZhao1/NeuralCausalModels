@@ -29,9 +29,10 @@ assert len(sys.argv) < 4 or sys.argv[3].isdigit()  # sample_size to use
 
 cls = getattr(pipeline, sys.argv[1])
 gpu = None if len(sys.argv) < 3 else [int(sys.argv[2])]
-ns = list((10 ** np.linspace(3, 6, 16)).astype(int))[:-1]
+#ns = list((10 ** np.linspace(3, 6, 16)).astype(int))[:-1]
+ns = [1000]
 dims = [1]  # , 2, 4, 8, 16, 32, 64, 128, 256]
-n_trials = 25
+n_trials = 1
 
 cg_files = [
     'dat/cg/napkin.cg',
