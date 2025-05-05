@@ -74,7 +74,7 @@ def interventional_is_observational(g, x='X', y='Y'):
                    for k in itertools.chain(g.v, g.bi))
 
 
-def datagen(cg_file=None, n=500000, dat=None, dim=1, min_ate_tv_diff=0.05, adjust_ate=True):
+def datagen(cg_file=None, n=500000, dat=None, dim=1, min_ate_tv_diff=0.05, adjust_ate=False):
     assert (cg_file is None) != (dat is None)
 
     # create true data-generating model
@@ -213,8 +213,10 @@ def run(pipeline, cg_file, n, dim, trial_index, gpu=None,
                     accumulate_grad_batches=1,
                     logger=pl.loggers.TensorBoardLogger(f'{d}/logs/'),
                     log_every_n_steps=10,
-                    terminate_on_nan=True,
-                    gpus=gpu
+                    #terminate_on_nan=True,
+                    #gpus=gpu
+                    accelerator='gpu' if gpu else 'cpu',
+                    devices=gpu if gpu else None  # 添加 devices 参数
                 ), checkpoint
 
             # train model

@@ -32,15 +32,21 @@ class BiasedNLLNCMPipeline(BasePipeline):
 
     def configure_optimizers(self):
         optim = T.optim.AdamW(self.ncm.parameters(), lr=4e-3)
+        scheduler = T.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optim, T_0=50, T_mult=1, eta_min=1e-4
+        )
         return {
-            'optimizer': optim,
-            'lr_scheduler': T.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                optim, 50, 1, eta_min=1e-4)
+            "optimizer": optim,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "epoch",
+                "frequency": 1
+            }
         }
 
     def training_step(self, batch, batch_idx):
-        opt = self.optimizers()
-        n = int(10 ** 6)
+        opt = self.optimizers()  # 获取优化器
+        n = int(10 ** 3)
         loss_agg = 0
         nll_agg = []
         nlpv_agg = []
@@ -56,7 +62,7 @@ class BiasedNLLNCMPipeline(BasePipeline):
         for v, nlpv in zip(space, self.nlpvs):
             nll = self.ncm.biased_nll(v, n=n)
             loss = T.exp(-nlpv) * (nll - nlpv)
-            self.manual_backward(loss, opt)
+            self.manual_backward(loss)
             nll_agg.append(nll.item())
             nlpv_agg.append(nlpv.item())
             loss_agg += loss.item()

@@ -11,6 +11,9 @@ import torch as T  # noqa: E402
 from src import pipeline  # noqa: E402
 from src.run.pipeline import get_key, run  # noqa: E402
 
+import torch
+torch.set_float32_matmul_precision('medium')  # 或者 'high'
+
 warnings.filterwarnings(
     "ignore", "Setting attributes on ParameterDict is not supported.")
 warnings.filterwarnings("ignore", category=UserWarning,
@@ -35,10 +38,10 @@ dims = [1]  # , 2, 4, 8, 16, 32, 64, 128, 256]
 n_trials = 1
 
 cg_files = [
-    'dat/cg/napkin.cg',
-    'dat/cg/backdoor.cg',
-    'dat/cg/frontdoor.cg',
-    'dat/cg/m.cg',
+    #'dat/cg/exp1.cg',
+    #'dat/cg/exp2.cg',
+    #'dat/cg/exp3.cg',
+    'dat/cg/exp4.cg',
 ]
 
 for i, (n, dim, cg_file, trial_index) in enumerate(itertools.product(
