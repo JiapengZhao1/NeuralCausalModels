@@ -20,4 +20,6 @@ class BasePipeline(pl.LightningModule):
     def train_dataloader(self):  # 1 epoch = 1 step
         return T.utils.data.DataLoader(
             T.utils.data.TensorDataset(T.zeros(1, 1)),
-            batch_size=1)
+            batch_size=1,
+            #num_workers=31
+            )
