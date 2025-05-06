@@ -79,10 +79,11 @@ def datagen(cg_file=None, n=500000, dat=None, dim=1, min_ate_tv_diff=0.05, adjus
 
     # create true data-generating model
     g = CausalGraph.read(cg_file)
+    adjust_ate = False
     if adjust_ate:
         ctm = CTM(cg_file, v_size={v: 1 if v in ('X', 'Y') else dim for v in g}).eval()
     else:
-        ctm = CTM(cg_file).eval()
+        ctm = CTM(cg_file).to('cuda')
 
     # if P(Y | X) != P(Y | do(X)), increase |ate - tv| to >= min_ate_tv_diff
     if adjust_ate:

@@ -28,6 +28,7 @@ class BiasedNLLNCMPipeline(BasePipeline):
                       for v in space]
 
     def forward(self, n=1000, u=None, do={}):
+        assert u.is_cuda, "Input tensor is not on GPU"
         return self.ncm(n, u, do)
 
     def configure_optimizers(self):
@@ -71,10 +72,11 @@ class BiasedNLLNCMPipeline(BasePipeline):
         self.log('train_loss', loss_agg, prog_bar=True)
         self.log('lr', opt.param_groups[0]['lr'], prog_bar=True)
 
+        """
         # logging
         if (self.current_epoch + 1) % 10 == 0:
             results = metric.all_metrics(self.ctm, self.ncm, self.dat,
-                                         self.cg_file, n=10000)
+                                         self.cg_file, n=1000)
             for k, v in results.items():
                 self.log(k, v)
 
@@ -89,3 +91,4 @@ class BiasedNLLNCMPipeline(BasePipeline):
                 ], dim=-1).numpy()
                 print(pd.DataFrame(arr, columns=['P*(V)', 'P(V)', 'loss']))
             print(pd.Series(results))
+        """

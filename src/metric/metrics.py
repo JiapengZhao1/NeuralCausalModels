@@ -66,7 +66,7 @@ def probability_table(m=None, n=1000000, do={}, dat=None):
                 dat = m(n, do=do)
         else:
             n = len(next(iter(dat.values())))
-        df = pd.DataFrame({k: v.detach().flatten().numpy()
+        df = pd.DataFrame({k: v.detach().flatten().cpu().numpy()
                            for k, v in dat.items()},
                           index=range(n))
         return (df.groupby(list(df.columns))
