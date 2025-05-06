@@ -38,10 +38,14 @@ dims = [1]  # , 2, 4, 8, 16, 32, 64, 128, 256]
 n_trials = 1
 
 cg_files = [
-    #'dat/cg/exp1.cg',
-    #'dat/cg/exp2.cg',
-    #'dat/cg/exp3.cg',
+    'dat/cg/exp1.cg',
+    'dat/cg/exp2.cg',
+    'dat/cg/exp3.cg',
     'dat/cg/exp4.cg',
+    'dat/cg/exp5.cg',
+    'dat/cg/exp6.cg',
+    'dat/cg/exp7.cg',
+    'dat/cg/exp8.cg',
 ]
 
 for i, (n, dim, cg_file, trial_index) in enumerate(itertools.product(

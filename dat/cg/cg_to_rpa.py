@@ -48,7 +48,7 @@ def convert_to_rpa(nodes, edges, bidirected_edges):
     # Add bidirected edges
     for node1, node2 in bidirected_edges:
         rpa[node2].append((node1,))
-        rpa[node1].append((node2,))
+        #rpa[node1].append((node2,))
 
     # Ensure all nodes are in the RPA dictionary
     for node in nodes:
@@ -71,22 +71,32 @@ def process_cg_files(cg_files):
     return rpa_results
 
 
+def format_rpa_output(rpa_results):
+    """
+    Format the RPA results into the desired output style.
+    """
+    formatted_output = []
+    for graph_name, rpa in rpa_results.items():
+        formatted_rpa = ", ".join(
+            f"{key}={value}" for key, value in rpa.items()
+        )
+        formatted_output.append(f"'{graph_name}': dict({formatted_rpa}),")
+    return "\n".join(formatted_output)
+
+
 # List of .cg files
 cg_files = [
-    "/home/NeuralCausalModels/dat/cg/5-ch.cg",
-    "/home/NeuralCausalModels/dat/cg/6-cc.cg",
-    "/home/NeuralCausalModels/dat/cg/9-ch.cg",
-    "/home/NeuralCausalModels/dat/cg/9-d.cg",
-    "/home/NeuralCausalModels/dat/cg/15-cc.cg",
-    "/home/NeuralCausalModels/dat/cg/17-d.cg",
-    "/home/NeuralCausalModels/dat/cg/25-ch.cg",
-    "/home/NeuralCausalModels/dat/cg/45-cc.cg",
-    "/home/NeuralCausalModels/dat/cg/49-ch.cg",
-    "/home/NeuralCausalModels/dat/cg/65-d.cg",
-    "/home/NeuralCausalModels/dat/cg/99-ch.cg",
+    "/home/NeuralCausalModels/dat/cg/exp1.cg",
+    "/home/NeuralCausalModels/dat/cg/exp2.cg",
+    "/home/NeuralCausalModels/dat/cg/exp3.cg",
+    "/home/NeuralCausalModels/dat/cg/exp4.cg",
+    "/home/NeuralCausalModels/dat/cg/exp5.cg",
+    "/home/NeuralCausalModels/dat/cg/exp6.cg",
+    "/home/NeuralCausalModels/dat/cg/exp7.cg",
+    "/home/NeuralCausalModels/dat/cg/exp8.cg",
 ]
 
 # Process the .cg files and print the RPA formats
 rpa_results = process_cg_files(cg_files)
-for graph_name, rpa in rpa_results.items():
-    print(f"'{graph_name}': {rpa},")
+formatted_output = format_rpa_output(rpa_results)
+print(formatted_output)
