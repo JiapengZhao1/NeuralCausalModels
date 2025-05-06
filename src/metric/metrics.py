@@ -137,6 +137,49 @@ def plugin_ate(dat, cg_file):
         return float('nan')
 
 
+def interventional_distribution_error(truth, ncm, n=1000000):
+    """
+    Calculate the average absolute error between P(Y|do(X)) distributions
+    of the true model and the learned NCM model across all combinations of Y and X.
+    
+    Args:
+        truth: The true causal model
+        ncm: The learned neural causal model
+        n: Number of samples to use for estimation
+        
+    Returns:
+        Average absolute error across all P(Y|do(X)) combinations
+    """
+    errors = []
+    
+    for x_val in (0, 1):
+        for y_val in (0, 1):
+            # Calculate P(Y=y|do(X=x)) for truth model
+            if isinstance(truth, CTM):
+                with evaluating(truth):
+                    true_prob = truth.pmf({'Y': y_val}, do={'X': T.tensor([[x_val]], )})
+            else:
+                with evaluating(truth):
+                    samples = truth(n, do={'X': T.ones(n, 1) * x_val})
+                    true_prob = (samples['Y'] == y_val).float().mean().item()
+            
+            # Calculate P(Y=y|do(X=x)) for NCM model
+            if isinstance(ncm, CTM):
+                with evaluating(ncm):
+                    ncm_prob = ncm.pmf({'Y': y_val}, do={'X': T.tensor([[x_val]], )})
+            else:
+                with evaluating(ncm):
+                    samples = ncm(n, do={'X': T.ones(n, 1) * x_val})
+                    ncm_prob = (samples['Y'] == y_val).float().mean().item()
+            
+            # Calculate absolute error
+            error = abs(true_prob - ncm_prob)
+            errors.append(error)
+    
+    # Return average error
+    return sum(errors) / len(errors)
+
+
 def all_metrics(truth, ncm, dat, cg_file, n=1000000):
     m = dict(
         true_ate=ate(truth),
@@ -145,7 +188,8 @@ def all_metrics(truth, ncm, dat, cg_file, n=1000000):
         ncm_tv=tv(ncm, n=n),
         kl=kl(truth, ncm, n=n),
         supremum_norm=supremum_norm(truth, ncm, n=n),
-        plugin_ate=plugin_ate(dat, cg_file))
+        plugin_ate=plugin_ate(dat, cg_file),
+        interventional_distribution_error=interventional_distribution_error(truth, ncm, n=n))
     m['dat_tv'] = (dat['Y'][dat['X'] == 1].float().mean()
                    - dat['Y'][dat['X'] == 0].float().mean()).item()
 
