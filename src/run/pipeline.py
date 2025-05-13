@@ -6,6 +6,7 @@ import itertools
 import json
 import os
 import shutil
+import time
 from contextlib import contextmanager
 from email.message import EmailMessage
 from smtplib import SMTP
@@ -188,6 +189,7 @@ def run(pipeline, cg_file, n, dim, trial_index, gpu=None,
             ctm, dat = datagen(cg_file, n=n, dim=dim)
             m = pipeline(ctm, dat, cg_file)
 
+            """
             # print info
             print('ctm')
             print(metric.probability_table(ctm))
@@ -195,8 +197,10 @@ def run(pipeline, cg_file, n, dim, trial_index, gpu=None,
             print(metric.probability_table(dat=dat))
             print('ncm')
             print(metric.probability_table(m.ncm))
-            print('all metrics (prior to training)')
-            print(metric.all_metrics(m.ctm, m.ncm, m.dat, cg_file))
+            """
+            #print('all metrics (prior to training)')
+            #print(metric.mad_metrics(m.ctm, m.ncm, m.dat, cg_file))
+            
 
             # function for building pytorch-lightning trainer
             def create_trainer(gpu=None):
@@ -229,16 +233,24 @@ def run(pipeline, cg_file, n, dim, trial_index, gpu=None,
                 trainer_min, checkpoint_min = create_trainer(gpu)
                 trainer_max, checkpoint_max = create_trainer(gpu)
                 print("\nTraining min model...")
+                start_time = time.time()
                 trainer_min.fit(m_min)
+                min_train_time = time.time() - start_time
+
                 ckpt = T.load(checkpoint_min.best_model_path)
                 m_min.load_state_dict(ckpt['state_dict'])
                 print("\nTraining max model...")
+                start_time = time.time()
                 trainer_max.fit(m_max)
+                max_train_time = time.time() - start_time
+
                 ckpt = T.load(checkpoint_max.best_model_path)
                 m_max.load_state_dict(ckpt['state_dict'])
 
                 results = metric.all_metrics_minmax(
                     m_min.ctm, m_min.ncm, m_max.ncm, m_min.dat, m_min.cg_file, n=100000)
+                results['min_train_time_sec'] = min_train_time
+                results['max_train_time_sec'] = max_train_time
                 print(results)
 
                 # save results
@@ -255,12 +267,17 @@ def run(pipeline, cg_file, n, dim, trial_index, gpu=None,
                 if gpu is None:
                     gpu = int(T.cuda.is_available())
                 trainer, checkpoint = create_trainer(gpu)
+                start_time = time.time()
                 trainer.fit(m)
+                train_time = time.time() - start_time
                 # load_from_checkpoint() doesn't work
                 ckpt = T.load(checkpoint.best_model_path)
                 m.load_state_dict(ckpt['state_dict'])
-                results = metric.all_metrics(
-                    m.ctm, m.ncm, m.dat, m.cg_file, n=100000)
+                #results = metric.all_metrics(
+                    #m.ctm, m.ncm, m.dat, m.cg_file, n=1000)
+                results = metric.mad_metrics(
+                    m.ctm, m.ncm, m.dat, m.cg_file, n=1000)
+                results['train_time_sec'] = train_time
                 print(results)
 
                 # save results

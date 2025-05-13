@@ -34,19 +34,21 @@ cls = getattr(pipeline, sys.argv[1])
 gpu = None if len(sys.argv) < 3 else [int(sys.argv[2])]
 #ns = list((10 ** np.linspace(3, 6, 16)).astype(int))[:-1]
 ns = [1000]
-dims = [1]  # , 2, 4, 8, 16, 32, 64, 128, 256]
+dims = [4]  # , 2, 4, 8, 16, 32, 64, 128, 256]
 n_trials = 1
 
 cg_files = [
     #'dat/cg/napkin.cg',
-    #'dat/cg/exp1.cg',
-    #'dat/cg/exp2.cg',
-    #'dat/cg/exp3.cg',
-    #'dat/cg/exp4.cg',
-    'dat/cg/exp5.cg',
-    #'dat/cg/exp6.cg',
-    #'dat/cg/exp7.cg',
-    #'dat/cg/exp8.cg',
+    'dat/cg/5-ch.cg',
+    #'dat/cg/6-cc.cg',
+    'dat/cg/9-ch.cg',
+    #'dat/cg/15-cc.cg',
+    #'dat/cg/17-d.cg',
+    #'dat/cg/25-cc.cg',
+    #'dat/cg/45-cc.cg',
+    'dat/cg/49-ch.cg',
+    #'dat/cg/65-d.cg',
+    'dat/cg/99-ch.cg',
 ]
 
 for i, (n, dim, cg_file, trial_index) in enumerate(itertools.product(

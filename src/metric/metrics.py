@@ -138,45 +138,37 @@ def plugin_ate(dat, cg_file):
 
 
 def interventional_distribution_error(truth, ncm, n=1000000):
-    """
-    Calculate the average absolute error between P(Y|do(X)) distributions
-    of the true model and the learned NCM model across all combinations of Y and X.
-    
-    Args:
-        truth: The true causal model
-        ncm: The learned neural causal model
-        n: Number of samples to use for estimation
-        
-    Returns:
-        Average absolute error across all P(Y|do(X)) combinations
-    """
     errors = []
-    
+
+    # 只采样一次 do(X=0) 和 do(X=1)
+    def get_probs(model):
+        if isinstance(model, CTM):
+            with evaluating(model):
+                return [
+                    [model.pmf({'Y': y_val}, do={'X': T.tensor([[x_val]])}) for y_val in (0, 1)]
+                    for x_val in (0, 1)
+                ]
+        else:
+            with evaluating(model):
+                samples0 = model(n, do={'X': T.zeros(n, 1)})
+                samples1 = model(n, do={'X': T.ones(n, 1)})
+                probs = []
+                for samples in [samples0, samples1]:
+                    probs.append([
+                        (samples['Y'] == y_val).float().mean().item()
+                        for y_val in (0, 1)
+                    ])
+                return probs
+
+    truth_probs = get_probs(truth)
+    ncm_probs = get_probs(ncm)
+
+    # 直接比较四种组合
     for x_val in (0, 1):
         for y_val in (0, 1):
-            # Calculate P(Y=y|do(X=x)) for truth model
-            if isinstance(truth, CTM):
-                with evaluating(truth):
-                    true_prob = truth.pmf({'Y': y_val}, do={'X': T.tensor([[x_val]], )})
-            else:
-                with evaluating(truth):
-                    samples = truth(n, do={'X': T.ones(n, 1) * x_val})
-                    true_prob = (samples['Y'] == y_val).float().mean().item()
-            
-            # Calculate P(Y=y|do(X=x)) for NCM model
-            if isinstance(ncm, CTM):
-                with evaluating(ncm):
-                    ncm_prob = ncm.pmf({'Y': y_val}, do={'X': T.tensor([[x_val]], )})
-            else:
-                with evaluating(ncm):
-                    samples = ncm(n, do={'X': T.ones(n, 1) * x_val})
-                    ncm_prob = (samples['Y'] == y_val).float().mean().item()
-            
-            # Calculate absolute error
-            error = abs(true_prob - ncm_prob)
+            error = abs(truth_probs[x_val][y_val] - ncm_probs[x_val][y_val])
             errors.append(error)
-    
-    # Return average error
+
     return sum(errors) / len(errors)
 
 
@@ -201,6 +193,10 @@ def all_metrics(truth, ncm, dat, cg_file, n=1000000):
     m['err_plugin_ate_ncm_ate'] = m['plugin_ate'] - m['ncm_ate']
     return m
 
+def mad_metrics(truth, ncm, dat, cg_file, n=1000000):
+    m = dict(
+        interventional_distribution_error=interventional_distribution_error(truth, ncm, n=n))
+    return m 
 
 def all_metrics_minmax(truth, ncm_min, ncm_max, dat, cg_file, n=1000000):
     m = dict(
